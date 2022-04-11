@@ -3,26 +3,25 @@
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
- int main() {
-  int fd[4];
-  int sum[4];
-  int i,j;
-  for(i=0;i<4;i++)
-  {
-    fd[i]=open("file",O_RDONLY);
-    read(fd[i],&sum[i],4);
-  }
-  for(i=0;i<4;i++)
-  {
-    close(fd[i]);
-  }
-  for(i=0;i<4;i++)
-  {
-    for(j=i+1;j<4;j++)
-    {
-      sum[i]+=sum[j];
+#include <omp.h>
+int main(){
+    int sum = 0;
+    int fd[4];
+    int i;
+    int num;
+    char *filename[4] = {"file1.bin", "file2.bin", "file3.bin", "file4.bin"};
+    for(i = 0; i < 4; i++){
+        fd[i] = open(filename[i], O_RDONLY);
+        if(fd[i] == -1){
+            printf("Error opening file %s\n", filename[i]);
+            exit(1);
+        }
     }
-  }
-  printf("%d\n",sum[0]);
-  return 0;
+    #pragma omp parallel for private(num)
+    for(i = 0; i < 4; i++){
+        read(fd[i], &num, sizeof(int));
+        sum += num;
+    }
+    printf("Sum: %d\n", sum);
+    return 0;
 }
